@@ -1,6 +1,4 @@
 from tkinter import *
-from tkinter.ttk import *
-import tkinter as tk
 from tkinter import messagebox
 
 
@@ -13,20 +11,26 @@ def read_current_positoin():
         all_line = file.readline()
 
 class Grid():
-    def __init__(self, number_of_rows, number_of_cols):
+    def __init__(self, x_max, y_max, number_of_rows, number_of_cols):
+        self.x_max = x_max
+        self.y_max = y_max
         self.number_of_rows = number_of_rows
         self.number_of_cols = number_of_cols
 
-class Cell():
-    def __init__(self, midpoint_coord):
+    def calculate_(self, ):
         pass
 
-class Task():
-    def __init__(self, ):
-        pass
+
+class Cell():
+    def __init__(self, index, midpoint_coord):
+        self.index = index
+        self.midpoint_coord = midpoint_coord
 
 class Tasks():
-    def __init__(self, ):
+    def __init__(self, list_of_tasks):
+        self.list_of_tasks = list_of_tasks
+
+    def execute_tasks(self, ):
         pass
 
 
@@ -34,21 +38,20 @@ def to_initial_position():
     print("Going back")
     messagebox.showinfo("Сообщение", "На исходную точку")
 
-list_of_tasks = set()
+list_of_tasks = []
 
 def chosen_by(index):
     print(index-1)
     print(grid_frame.winfo_children()[index-1])
-    if (grid_frame.winfo_children()[index-1] in list_of_tasks):
-        list_of_tasks.remove(grid_frame.winfo_children()[index-1])
-    else:
-        # grid_frame.winfo_children()[index-1].configure(bg="red", fg="yellow")
-        list_of_tasks.add(grid_frame.winfo_children()[index-1])
 
-    print(list_of_tasks)
+
 
 def create_grid():
     if not (width.get() == "" and height.get() == ""):
+        grid_frame.grid_columnconfigure(list(range(int(height.get()))), weight=1)
+        if (footer_frame.winfo_children()):
+            for child in footer_frame.winfo_children():
+                child.destroy()
         if (grid_frame.winfo_children()):
             for child in grid_frame.winfo_children():
                 child.destroy()
@@ -56,50 +59,72 @@ def create_grid():
         for i in range(int(width.get())):
             for j in range(int(height.get())):
                 cell_count += 1
-                back_button = Button(grid_frame, text = str(cell_count), command= lambda ztemp= cell_count : chosen_by(ztemp))
-                back_button.grid(row = i, column = j, sticky="wens")
+                back_button = Button(grid_frame, text = str(cell_count), command= lambda ztemp= cell_count : chosen_by(ztemp), font=main_font)
+                back_button.grid(row = i, column = j, sticky="WENS")
+
+        all_cells = Checkbutton(footer_frame, text='Все ячейки',variable=them_all, onvalue=1, offvalue=0, command=choose_all, font=main_font)
+        all_cells.grid(row = int(width.get())+3, column = 0, pady = 5, sticky="WENS")
+
+        execute_button = Button(footer_frame, text = "Начать", command = to_initial_position, font=main_font)
+        execute_button.grid(row = int(width.get())+4, column = 0, pady = 5, sticky="WENS")
+
     else:
         print("No date for grid creation")
         messagebox.showinfo("Сообщение", "Введите данные о сетке")
 
-    grid_frame.pack()
+    grid_frame.pack(expand=True, fill=BOTH)
+    footer_frame.pack(expand=True, fill=BOTH)
+
+def choose_all():
+    pass
+
 
 
 master = Tk()
 
 master.title("Image Taker")
+main_font = ("Terminal", 14)
 
 main_frame = Frame(master)
 grid_frame = Frame(master)
+footer_frame = Frame(master)
+
+main_frame.grid_columnconfigure(list(range(2)), weight=1)
+main_frame.grid_rowconfigure(list(range(3)), weight=1)
+footer_frame.grid_columnconfigure(0, weight=1)
+
+main_frame.grid_rowconfigure(list(range(3)), weight=1)
+grid_frame.grid_rowconfigure(list(range(3)), weight=1)
+footer_frame.grid_rowconfigure(list(range(3)), weight=1)
 
 width = StringVar()
 height = StringVar()
 them_all = BooleanVar()
 wait_time = StringVar()
 
-width_label = Label(main_frame, text = "Кол. строк:")
-height_label = Label(main_frame, text = "Кол. столб:")
-wait_label = Label(main_frame, text = "Ожидание (сек):")
+width_label = Label(main_frame, text = "Кол. строк:", anchor=CENTER, relief=RIDGE, font=main_font)
+height_label = Label(main_frame, text = "Кол. столб:", anchor=CENTER, relief=RIDGE, font=main_font)
+wait_label = Label(main_frame, text = "Ожидание (сек):", anchor=CENTER, relief=RIDGE, font=main_font)
 
-width_label.grid(row = 0, column = 0, sticky = W, pady = 2)
-height_label.grid(row = 1, column = 0, sticky = W, pady = 2)
-wait_label.grid(row = 2, column = 0, sticky = W, pady = 2)
+width_label.grid(row = 0, column = 0, pady = 2, sticky="WENS")
+height_label.grid(row = 1, column = 0, pady = 2, sticky="WENS")
+wait_label.grid(row = 2, column = 0, pady = 2, sticky="WENS")
 
 width_entry = Entry(main_frame, textvariable = width)
 height_entry = Entry(main_frame, textvariable = height)
 wait_entry = Entry(main_frame, textvariable = wait_time)
 
-width_entry.grid(row = 0, column = 1, pady = 2)
-height_entry.grid(row = 1, column = 1, pady = 2)
-wait_entry.grid(row = 2, column = 1, pady = 2)
+width_entry.grid(row = 0, column = 1, pady = 2, sticky="WENS")
+height_entry.grid(row = 1, column = 1, pady = 2, sticky="WENS")
+wait_entry.grid(row = 2, column = 1, pady = 2, sticky="WENS")
 
-create_grid_button = Button(main_frame, text = "Создать сетку", command = create_grid)
-create_grid_button.grid(row = 3, column = 0, columnspan = 2, pady = 5)
+create_grid_button = Button(main_frame, height = 2, text = "Создать сетку", command = create_grid, font=main_font)
+create_grid_button.grid(row = 3, column = 0, columnspan = 2, pady = 5, sticky="WENS")
 
-back_button = Button(main_frame, text = "На исходную точку", command = to_initial_position)
-back_button.grid(row = 4, column = 0, columnspan = 2, pady = 5)
+back_button = Button(main_frame, height = 2, text = "На исходную точку", command = to_initial_position, font=main_font)
+back_button.grid(row = 4, column = 0, columnspan = 2, pady = 5, sticky="WENS")
 
-main_frame.pack()
+main_frame.pack(expand=True, fill=BOTH)
 
 mainloop()
 
