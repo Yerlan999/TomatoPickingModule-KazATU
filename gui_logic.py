@@ -41,12 +41,27 @@ def to_initial_position():
 list_of_tasks = []
 
 def chosen_by(index):
-    print(index-1)
-    print(grid_frame.winfo_children()[index-1])
+    # print(index-1)
+    # print(grid_frame.winfo_children()[index-1])
 
+    chosen = grid_frame.winfo_children()[index-1]
+    if (chosen in list_of_tasks):
+        list_of_tasks.remove(chosen)
+        chosen.configure(bg="white")
+    else:
+        list_of_tasks.append(chosen)
+        chosen.configure(bg="green")
+
+    # print(list_of_tasks)
+
+def run_process():
+    # print(len(list_of_tasks))
+    print(width.get()) # strok
+    print(height.get()) # stolbtsov
 
 
 def create_grid():
+
     if not (width.get() == "" and height.get() == ""):
         grid_frame.grid_columnconfigure(list(range(int(height.get()))), weight=1)
         if (footer_frame.winfo_children()):
@@ -55,28 +70,45 @@ def create_grid():
         if (grid_frame.winfo_children()):
             for child in grid_frame.winfo_children():
                 child.destroy()
+        list_of_tasks.clear()
         cell_count = 0
         for i in range(int(width.get())):
             for j in range(int(height.get())):
                 cell_count += 1
+                print(cell_count, i, j)
                 back_button = Button(grid_frame, text = str(cell_count), command= lambda ztemp= cell_count : chosen_by(ztemp), font=main_font)
                 back_button.grid(row = i, column = j, sticky="WENS")
 
         all_cells = Checkbutton(footer_frame, text='Все ячейки',variable=them_all, onvalue=1, offvalue=0, command=choose_all, font=main_font)
         all_cells.grid(row = int(width.get())+3, column = 0, pady = 5, sticky="WENS")
 
-        execute_button = Button(footer_frame, text = "Начать", command = to_initial_position, font=main_font)
+        execute_button = Button(footer_frame, text = "Начать", command = run_process, font=main_font)
         execute_button.grid(row = int(width.get())+4, column = 0, pady = 5, sticky="WENS")
 
     else:
         print("No date for grid creation")
         messagebox.showinfo("Сообщение", "Введите данные о сетке")
 
+    grid_frame.grid_columnconfigure(list(range(int(height.get()))), weight=1)
+    grid_frame.grid_rowconfigure(list(range(int(width.get()))), weight=1)
+
     grid_frame.pack(expand=True, fill=BOTH)
     footer_frame.pack(expand=True, fill=BOTH)
 
 def choose_all():
-    pass
+    if them_all.get():
+        for child in grid_frame.winfo_children():
+            if (child in list_of_tasks):
+                continue
+            else:
+                list_of_tasks.append(child)
+                child.configure(bg="green")
+    else:
+        for task in list_of_tasks:
+            task.configure(bg="white")
+        list_of_tasks.clear()
+
+
 
 
 
@@ -91,10 +123,8 @@ footer_frame = Frame(master)
 
 main_frame.grid_columnconfigure(list(range(2)), weight=1)
 main_frame.grid_rowconfigure(list(range(3)), weight=1)
-footer_frame.grid_columnconfigure(0, weight=1)
 
-main_frame.grid_rowconfigure(list(range(3)), weight=1)
-grid_frame.grid_rowconfigure(list(range(3)), weight=1)
+footer_frame.grid_columnconfigure(0, weight=1)
 footer_frame.grid_rowconfigure(list(range(3)), weight=1)
 
 width = StringVar()
