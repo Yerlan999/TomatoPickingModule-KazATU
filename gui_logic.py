@@ -33,42 +33,56 @@ class ButtonCell(Button):
 
 
 class Tasks():
-    def __init__(self, list_of_tasks):
-        self.list_of_tasks = list_of_tasks
+    def __init__(self):
+        self.list_of_tasks = []
 
-    def execute_tasks(self, ):
+    def add_or_remove_task(self, task):
+        if (task in self.list_of_tasks):
+            self.list_of_tasks.remove(task)
+            task.configure(bg="white")
+        else:
+            self.list_of_tasks.append(task)
+            task.configure(bg="green")
+
+    def execute_tasks(self):
         pass
 
+    def clear_tasks(self):
+        for task in self.list_of_tasks:
+            task.configure(bg="white")
+        self.list_of_tasks.clear()
+
+
+    def select_all(self):
+        for task in grid_frame.winfo_children():
+            if (task in self.list_of_tasks):
+                continue
+            else:
+                self.list_of_tasks.append(task)
+                task.configure(bg="green")
 
 def to_initial_position():
     print("Going back")
     messagebox.showinfo("Сообщение", "На исходную точку")
 
-list_of_tasks = []
+tasks = Tasks()
 
 def chosen_by(index):
     # print(index-1)
     # print(grid_frame.winfo_children()[index-1])
 
     chosen = grid_frame.winfo_children()[index-1]
-    if (chosen in list_of_tasks):
-        list_of_tasks.remove(chosen)
-        chosen.configure(bg="white")
-    else:
-        list_of_tasks.append(chosen)
-        chosen.configure(bg="green")
-
-    # print(list_of_tasks)
+    tasks.add_or_remove_task(chosen)
 
 def run_process():
     # print(len(list_of_tasks))
-    print(width.get())
-    print(height.get())
-    print(len(list_of_tasks))
+    print(len(tasks.list_of_tasks))
+    for task in tasks.list_of_tasks:
+        print(task.cell_index, task.midpoint_coord)
 
 
 def create_grid():
-
+    global grid
     try:
         assert width.get() != ""; checking_width = int(width.get())
         assert height.get() != ""; checking_height = int(height.get())
@@ -76,52 +90,46 @@ def create_grid():
         print("No or invalid data for grid creation")
         messagebox.showinfo("Сообщение", "Введите корректные данные о сетке")
     else:
-        grid_frame.grid_columnconfigure(list(range(int(height.get()))), weight=1)
+        grid = Grid(X_MAX, Y_MAX, int(height.get()), int(width.get()))
+
+        grid_frame.grid_columnconfigure(list(range(grid.number_of_rows)), weight=1)
         if (footer_frame.winfo_children()):
             for child in footer_frame.winfo_children():
                 child.destroy()
         if (grid_frame.winfo_children()):
             for child in grid_frame.winfo_children():
                 child.destroy()
-        list_of_tasks.clear()
+        tasks.list_of_tasks.clear()
         cell_count = 0
-        for i in range(int(height.get())):
-            for j in range(int(width.get())):
+        for i in range(grid.number_of_rows):
+            for j in range(grid.number_of_cols):
                 cell_count += 1
 
-                cell_x_coord = int( X_MAX/int(width.get())/2 + (X_MAX/int(width.get()))*(j))
-                cell_y_coord = Y_MAX - int( Y_MAX/int(height.get())/2 + (Y_MAX/int(height.get()))*(i))
+                cell_x_coord = int( grid.x_max/grid.number_of_cols/2 + (grid.x_max/grid.number_of_cols)*(j))
+                cell_y_coord = grid.y_max - int( grid.y_max/grid.number_of_rows/2 + (grid.y_max/grid.number_of_rows)*(i))
 
-                print(cell_count, i, j, (cell_x_coord, cell_y_coord))
+                # print(cell_count, i, j, (cell_x_coord, cell_y_coord))
 
                 back_button = ButtonCell(cell_count, (cell_x_coord, cell_y_coord), grid_frame, text = str(cell_count), command= lambda ztemp= cell_count : chosen_by(ztemp), font=main_font)
                 back_button.grid(row = i, column = j, sticky="WENS")
 
         all_cells = Checkbutton(footer_frame, text='Все ячейки',variable=them_all, onvalue=1, offvalue=0, command=choose_all, font=main_font)
-        all_cells.grid(row = int(width.get())+3, column = 0, pady = 5, sticky="WENS")
+        all_cells.grid(row = grid.number_of_cols+3, column = 0, pady = 5, sticky="WENS")
 
         execute_button = Button(footer_frame, text = "Начать", command = run_process, font=main_font)
-        execute_button.grid(row = int(width.get())+4, column = 0, pady = 5, sticky="WENS")
+        execute_button.grid(row = grid.number_of_cols+4, column = 0, pady = 5, sticky="WENS")
 
-        grid_frame.grid_columnconfigure(list(range(int(width.get()))), weight=1)
-        grid_frame.grid_rowconfigure(list(range(int(height.get()))), weight=1)
+        grid_frame.grid_columnconfigure(list(range(grid.number_of_cols)), weight=1)
+        grid_frame.grid_rowconfigure(list(range(grid.number_of_rows)), weight=1)
 
         grid_frame.pack(expand=True, fill=BOTH)
         footer_frame.pack(expand=True, fill=BOTH)
 
 def choose_all():
     if them_all.get():
-        for child in grid_frame.winfo_children():
-            if (child in list_of_tasks):
-                continue
-            else:
-                list_of_tasks.append(child)
-                child.configure(bg="green")
+        tasks.select_all()
     else:
-        for task in list_of_tasks:
-            task.configure(bg="white")
-        list_of_tasks.clear()
-
+        tasks.clear_tasks()
 
 
 X_MAX = 2700 # Steps to reach the endge of X axis (EXAMPLE)
@@ -129,6 +137,7 @@ Y_MAX = 3100 # Steps to reach the endge of Y axis (EXAMPLE)
 
 
 master = Tk()
+grid = None
 
 master.title("Image Taker")
 main_font = ("Terminal", 14)
