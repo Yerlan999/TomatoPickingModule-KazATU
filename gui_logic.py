@@ -1,14 +1,54 @@
 from tkinter import *
 from tkinter import messagebox
 from time import sleep
+import RPi.GPIO as GPIO
 
-def save_current_position():
-    with open("current_position.txt", "w") as file:
-        file.write(str(M1x) + "," + str(M1y) + "," + str(M2x) + "," + str(M2y))
 
-def read_current_positoin():
-    with open("current_position.txt", "r") as file:
-        all_line = file.readline()
+class StepperMotor():
+    def __init__(self, which, step_pin, direction_pin, delay=0.208, resolution = 1):
+        self.which = which
+        self.step_pin = step_pin
+        self.direction_pin = direction_pin
+        self.delay = delay
+        self.current_step = 0
+
+        self.current_position = 0
+
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+        GPIO.setup(self.step_pin, GPIO.OUT)
+        GPIO.setup(self.direction_pin, GPIO.OUT)
+
+        if (which == "x"):
+            GPIO.setup(X_MS1_pin, GPIO.OUT)
+            GPIO.setup(X_MS2_pin, GPIO.OUT)
+            GPIO.setup(X_MS3_pin, GPIO.OUT)
+
+            GPIO.output(X_MS1_pin, resolution_dict[resolution][0])
+            GPIO.output(X_MS2_pin, resolution_dict[resolution][1])
+            GPIO.output(X_MS3_pin, resolution_dict[resolution][2])
+        else:
+            GPIO.setup(Y_MS1_pin, GPIO.OUT)
+            GPIO.setup(Y_MS2_pin, GPIO.OUT)
+            GPIO.setup(Y_MS3_pin, GPIO.OUT)
+
+            GPIO.output(Y_MS1_pin, resolution_dict[resolution][0])
+            GPIO.output(Y_MS2_pin, resolution_dict[resolution][1])
+            GPIO.output(Y_MS3_pin, resolution_dict[resolution][2])
+
+
+    def move(self, steps_to_take):
+        GPIO.output(self.direction_pin, int(steps_to_take > 0))
+
+        for x in range(steps_to_take):
+            GPIO.output(self.step_pin, GPIO.HIGH)
+            self.current_step += 1
+            sleep(self.delay)
+            GPIO.output(self.step_pin, GPIO.LOW)
+            sleep(self.delay)
+
+        return True
+
 
 class Grid():
     def __init__(self, x_max, y_max, number_of_rows, number_of_cols):
@@ -31,6 +71,24 @@ class ButtonCell(Button):
         self.cell_index = cell_index
         self.midpoint_coord = midpoint_coord
 
+    def reach_me(self):
+        print("Going to this cell")
+        read_current_positoin()
+
+        x_finished = x_stepper_motor.move(x_stepper_motor.current_position - self.midpoint_coord[0])
+        y_finished = y_stepper_motor.move(y_stepper_motor.current_position - self.midpoint_coord[1])
+
+        self.capture_me()
+
+        x_stepper_motor.current_position = self.midpoint_coord[0]
+        y_stepper_motor.current_position = self.midpoint_coord[1]
+
+        save_current_position()
+
+    def capture_me(self):
+        sleep(int(wait_time.get()))
+        print("Taking picture with WEB camera")
+
 
 class Tasks():
     def __init__(self):
@@ -45,7 +103,9 @@ class Tasks():
             task.configure(bg="green")
 
     def execute_tasks(self):
-        pass
+        # !!! DO SOMETHING ABOUT IT !!!
+        for task in self.list_of_tasks:
+            task.reach_me()
 
     def clear_tasks(self):
         for task in self.list_of_tasks:
@@ -64,35 +124,37 @@ class Tasks():
 def to_initial_position():
     print("Going back")
     messagebox.showinfo("Сообщение", "На исходную точку")
-
-tasks = Tasks()
+    x_stepper_motor.move(-abs(x_stepper_motor.current_position))
+    y_stepper_motor.move(-abs(y_stepper_motor.current_position))
 
 def chosen_by(index):
-    # print(index-1)
-    # print(grid_frame.winfo_children()[index-1])
-
     chosen = grid_frame.winfo_children()[index-1]
     tasks.add_or_remove_task(chosen)
 
+def choose_all():
+    if them_all.get():
+        tasks.select_all()
+    else:
+        tasks.clear_tasks()
+
 def run_process():
-    # print(len(list_of_tasks))
     print(len(tasks.list_of_tasks))
     for task in tasks.list_of_tasks:
         print(task.cell_index, task.midpoint_coord)
-
 
 def create_grid():
     global grid
     try:
         assert width.get() != ""; checking_width = int(width.get())
         assert height.get() != ""; checking_height = int(height.get())
+        assert wait_time.get() != ""; checking_wait = int(height.get())
     except:
         print("No or invalid data for grid creation")
         messagebox.showinfo("Сообщение", "Введите корректные данные о сетке")
     else:
         grid = Grid(X_MAX, Y_MAX, int(height.get()), int(width.get()))
-
         grid_frame.grid_columnconfigure(list(range(grid.number_of_rows)), weight=1)
+
         if (footer_frame.winfo_children()):
             for child in footer_frame.winfo_children():
                 child.destroy()
@@ -101,14 +163,13 @@ def create_grid():
                 child.destroy()
         tasks.list_of_tasks.clear()
         cell_count = 0
+
         for i in range(grid.number_of_rows):
             for j in range(grid.number_of_cols):
                 cell_count += 1
 
                 cell_x_coord = int( grid.x_max/grid.number_of_cols/2 + (grid.x_max/grid.number_of_cols)*(j))
                 cell_y_coord = grid.y_max - int( grid.y_max/grid.number_of_rows/2 + (grid.y_max/grid.number_of_rows)*(i))
-
-                # print(cell_count, i, j, (cell_x_coord, cell_y_coord))
 
                 back_button = ButtonCell(cell_count, (cell_x_coord, cell_y_coord), grid_frame, text = str(cell_count), command= lambda ztemp= cell_count : chosen_by(ztemp), font=main_font)
                 back_button.grid(row = i, column = j, sticky="WENS")
@@ -125,19 +186,50 @@ def create_grid():
         grid_frame.pack(expand=True, fill=BOTH)
         footer_frame.pack(expand=True, fill=BOTH)
 
-def choose_all():
-    if them_all.get():
-        tasks.select_all()
-    else:
-        tasks.clear_tasks()
+
+def save_current_position():
+    with open("current_position.txt", "w") as file:
+        file.write(str(x_stepper_motor.current_position) + "," + str(y_stepper_motor.current_position))
+
+def read_current_positoin():
+    with open("current_position.txt", "r") as file:
+        x_stepper_motor.current_position, y_stepper_motor.current_position = file.readline().split(",")
+
+resolution_dict = {1: [0,0,0],
+                   2: [1,0,0],
+                   4: [0,1,0],
+                   8: [1,1,0],
+                  16: [1,1,1],}
+
+X_STEP_PIN = 23
+X_DIRECTION_PIN = 24
+
+X_MS1_Pin = 14
+X_MS2_Pin = 15
+X_MS3_Pin = 18
 
 
-X_MAX = 2700 # Steps to reach the endge of X axis (EXAMPLE)
-Y_MAX = 3100 # Steps to reach the endge of Y axis (EXAMPLE)
+Y_STEP_PIN = 16
+Y_DIRECTION_PIN = 20
+
+Y_MS1_Pin = 25
+Y_MS2_Pin = 8
+Y_MS3_Pin = 7
+
+
+X_MAX = 2700
+Y_MAX = 3100
 
 
 master = Tk()
+
 grid = None
+tasks = Tasks()
+
+
+x_stepper_motor = StepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, 0.0025)
+y_stepper_motor = StepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, 0.0025)
+
 
 master.title("Image Taker")
 main_font = ("Terminal", 14)
@@ -183,4 +275,5 @@ main_frame.pack(expand=True, fill=BOTH)
 
 mainloop()
 
+GPIO.cleanup()
 print("Finish!")

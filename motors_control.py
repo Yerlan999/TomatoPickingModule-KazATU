@@ -1,4 +1,3 @@
-# System imports
 import RPi.GPIO as GPIO
 from time import sleep
 
@@ -9,7 +8,6 @@ class StepperHandler():
 
     def __init__(self, which, step_pin, direction_pin, delay=0.208, resolution = 1, steps_per_revolution=200,):
 
-        # Configure instance
         self.which = which
         self.CLOCKWISE = self.__CLOCKWISE
         self.ANTI_CLOCKWISE = self.__ANTI_CLOCKWISE
@@ -22,7 +20,6 @@ class StepperHandler():
 
         self.current_position = tuple()
 
-        # Setup gpio pins
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
         GPIO.setup(self.step_pin, GPIO.OUT)
@@ -53,10 +50,8 @@ class StepperHandler():
         print("Step pin: " + str(self.step_pin) + " direction pin: " + str(self.direction_pin) + " delay: " + str(self.delay))
         print("Taking " + str(steps_to_take) + " steps.")
 
-        # Set the direction
         GPIO.output(self.direction_pin, direction)
 
-        # Take requested number of steps
         for x in range(steps_to_take):
             print("Step " + str(x))
             GPIO.output(self.step_pin, GPIO.HIGH)
@@ -67,15 +62,14 @@ class StepperHandler():
 
 
 
-# Define pins
 X_STEP_PIN = 23
 X_DIRECTION_PIN = 24
 
 Y_STEP_PIN = 16
 Y_DIRECTION_PIN = 20
 
-X_MAX = 3000 # Steps to reach the endge of X axis (EXAMPLE)
-Y_MAX = 3100 # Steps to reach the endge of Y axis (EXAMPLE)
+X_MAX = 3000
+Y_MAX = 3100
 
 X_MS1_Pin = 14
 X_MS2_Pin = 15
@@ -86,12 +80,8 @@ Y_MS2_Pin = 8
 Y_MS3_Pin = 7
 
 
-# Create a new instance of our stepper class (note if you're just starting out with this you're probably better off using a delay of ~0.1)
 x_stepperHandler = StepperHandler("x", X_STEP_PIN, X_DIRECTION_PIN, 0.0025)
-# y_stepperHandler = StepperHandler("y", Y_STEP_PIN, Y_DIRECTION_PIN, 0.0025)
 
-# Go forwards once
 x_stepperHandler.Step(200)
 
-# Go backwards once
 x_stepperHandler.Step(200, x_stepperHandler.ANTI_CLOCKWISE)
