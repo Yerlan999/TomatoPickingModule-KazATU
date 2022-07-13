@@ -56,8 +56,8 @@ def chosen_by(index):
 
 def run_process():
     # print(len(list_of_tasks))
-    print(width.get()) # strok
-    print(height.get()) # stolbtsov
+    print(width.get())
+    print(height.get())
 
 
 def create_grid():
@@ -72,8 +72,8 @@ def create_grid():
                 child.destroy()
         list_of_tasks.clear()
         cell_count = 0
-        for i in range(int(width.get())):
-            for j in range(int(height.get())):
+        for i in range(int(height.get())):
+            for j in range(int(width.get())):
                 cell_count += 1
                 print(cell_count, i, j)
                 back_button = Button(grid_frame, text = str(cell_count), command= lambda ztemp= cell_count : chosen_by(ztemp), font=main_font)
@@ -89,8 +89,8 @@ def create_grid():
         print("No date for grid creation")
         messagebox.showinfo("Сообщение", "Введите данные о сетке")
 
-    grid_frame.grid_columnconfigure(list(range(int(height.get()))), weight=1)
-    grid_frame.grid_rowconfigure(list(range(int(width.get()))), weight=1)
+    grid_frame.grid_columnconfigure(list(range(int(width.get()))), weight=1)
+    grid_frame.grid_rowconfigure(list(range(int(height.get()))), weight=1)
 
     grid_frame.pack(expand=True, fill=BOTH)
     footer_frame.pack(expand=True, fill=BOTH)
@@ -140,12 +140,12 @@ width_label.grid(row = 0, column = 0, pady = 2, sticky="WENS")
 height_label.grid(row = 1, column = 0, pady = 2, sticky="WENS")
 wait_label.grid(row = 2, column = 0, pady = 2, sticky="WENS")
 
-width_entry = Entry(main_frame, textvariable = width)
 height_entry = Entry(main_frame, textvariable = height)
+width_entry = Entry(main_frame, textvariable = width)
 wait_entry = Entry(main_frame, textvariable = wait_time)
 
-width_entry.grid(row = 0, column = 1, pady = 2, sticky="WENS")
-height_entry.grid(row = 1, column = 1, pady = 2, sticky="WENS")
+height_entry.grid(row = 0, column = 1, pady = 2, sticky="WENS")
+width_entry.grid(row = 1, column = 1, pady = 2, sticky="WENS")
 wait_entry.grid(row = 2, column = 1, pady = 2, sticky="WENS")
 
 create_grid_button = Button(main_frame, height = 2, text = "Создать сетку", command = create_grid, font=main_font)
