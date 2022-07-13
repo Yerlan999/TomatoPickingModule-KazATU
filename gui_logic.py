@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
-
+from time import sleep
 
 def save_current_position():
     with open("current_position.txt", "w") as file:
@@ -16,15 +16,21 @@ class Grid():
         self.y_max = y_max
         self.number_of_rows = number_of_rows
         self.number_of_cols = number_of_cols
+        self.cell_width = self.calculate_cell_width()
+        self.cell_height = self.calculate_cell_height()
 
-    def calculate_(self, ):
-        pass
+    def calculate_cell_width(self):
+        return self.x_max/self.number_of_cols
+    def calculate_cell_height(self):
+        return self.y_max/self.number_of_rows
 
 
-class Cell():
-    def __init__(self, index, midpoint_coord):
-        self.index = index
+class ButtonCell(Button):
+    def __init__(self, cell_index, midpoint_coord, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cell_index = cell_index
         self.midpoint_coord = midpoint_coord
+
 
 class Tasks():
     def __init__(self, list_of_tasks):
@@ -58,11 +64,18 @@ def run_process():
     # print(len(list_of_tasks))
     print(width.get())
     print(height.get())
+    print(len(list_of_tasks))
 
 
 def create_grid():
 
-    if not (width.get() == "" and height.get() == ""):
+    try:
+        assert width.get() != ""; checking_width = int(width.get())
+        assert height.get() != ""; checking_height = int(height.get())
+    except:
+        print("No or invalid data for grid creation")
+        messagebox.showinfo("Сообщение", "Введите корректные данные о сетке")
+    else:
         grid_frame.grid_columnconfigure(list(range(int(height.get()))), weight=1)
         if (footer_frame.winfo_children()):
             for child in footer_frame.winfo_children():
@@ -75,8 +88,13 @@ def create_grid():
         for i in range(int(height.get())):
             for j in range(int(width.get())):
                 cell_count += 1
-                print(cell_count, i, j)
-                back_button = Button(grid_frame, text = str(cell_count), command= lambda ztemp= cell_count : chosen_by(ztemp), font=main_font)
+
+                cell_x_coord = int( X_MAX/int(width.get())/2 + (X_MAX/int(width.get()))*(j))
+                cell_y_coord = Y_MAX - int( Y_MAX/int(height.get())/2 + (Y_MAX/int(height.get()))*(i))
+
+                print(cell_count, i, j, (cell_x_coord, cell_y_coord))
+
+                back_button = ButtonCell(cell_count, (cell_x_coord, cell_y_coord), grid_frame, text = str(cell_count), command= lambda ztemp= cell_count : chosen_by(ztemp), font=main_font)
                 back_button.grid(row = i, column = j, sticky="WENS")
 
         all_cells = Checkbutton(footer_frame, text='Все ячейки',variable=them_all, onvalue=1, offvalue=0, command=choose_all, font=main_font)
@@ -85,15 +103,11 @@ def create_grid():
         execute_button = Button(footer_frame, text = "Начать", command = run_process, font=main_font)
         execute_button.grid(row = int(width.get())+4, column = 0, pady = 5, sticky="WENS")
 
-    else:
-        print("No date for grid creation")
-        messagebox.showinfo("Сообщение", "Введите данные о сетке")
+        grid_frame.grid_columnconfigure(list(range(int(width.get()))), weight=1)
+        grid_frame.grid_rowconfigure(list(range(int(height.get()))), weight=1)
 
-    grid_frame.grid_columnconfigure(list(range(int(width.get()))), weight=1)
-    grid_frame.grid_rowconfigure(list(range(int(height.get()))), weight=1)
-
-    grid_frame.pack(expand=True, fill=BOTH)
-    footer_frame.pack(expand=True, fill=BOTH)
+        grid_frame.pack(expand=True, fill=BOTH)
+        footer_frame.pack(expand=True, fill=BOTH)
 
 def choose_all():
     if them_all.get():
@@ -110,6 +124,8 @@ def choose_all():
 
 
 
+X_MAX = 2700 # Steps to reach the endge of X axis (EXAMPLE)
+Y_MAX = 3100 # Steps to reach the endge of Y axis (EXAMPLE)
 
 
 master = Tk()
