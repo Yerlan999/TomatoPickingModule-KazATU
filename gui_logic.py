@@ -4,6 +4,17 @@ from time import sleep
 import RPi.GPIO as GPIO
 
 
+# class DummyStepperMotor():
+
+#     def __init__(self, which, step_pin, direction_pin, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, delay=0.208, resolution = 1):
+#         self.which = which
+#         self.step_pin = step_pin
+#         self.direction_pin = direction_pin
+#         self.delay = delay
+#         self.current_step = 0
+
+#         self.current_position = 0
+
 class StepperMotor():
     def __init__(self, which, step_pin, direction_pin, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, delay=0.208, resolution = 1):
         self.which = which
@@ -72,11 +83,15 @@ class ButtonCell(Button):
         self.midpoint_coord = midpoint_coord
 
     def reach_me(self):
+        print()
         print("Going to this cell")
         read_current_positoin()
 
-        x_finished = x_stepper_motor.move(x_stepper_motor.current_position - self.midpoint_coord[0])
-        y_finished = y_stepper_motor.move(y_stepper_motor.current_position - self.midpoint_coord[1])
+        print(f"Moving to the x={self.midpoint_coord[0]}, y={self.midpoint_coord[1]}")
+        print(f'X diff: {self.midpoint_coord[0] - x_stepper_motor.current_position}, Y diff: {self.midpoint_coord[1] - y_stepper_motor.current_position}')
+
+        x_finished = x_stepper_motor.move(self.midpoint_coord[0] - x_stepper_motor.current_position)
+        y_finished = y_stepper_motor.move(self.midpoint_coord[1] - y_stepper_motor.current_position)
 
         self.capture_me()
 
@@ -84,6 +99,7 @@ class ButtonCell(Button):
         y_stepper_motor.current_position = self.midpoint_coord[1]
 
         save_current_position()
+        print()
 
     def capture_me(self):
         sleep(int(wait_time.get()))
@@ -124,15 +140,21 @@ class Tasks():
 def to_initial_position():
     print("Going back")
     messagebox.showinfo("Сообщение", "На исходную точку")
-    x_stepper_motor.move(-abs(x_stepper_motor.current_position))
-    y_stepper_motor.move(-abs(y_stepper_motor.current_position))
+
+    print(f'(Back) X diff: {-abs(x_stepper_motor.current_position)}, Y diff: {-abs(y_stepper_motor.current_position)}')
+    # x_stepper_motor.move(-abs(x_stepper_motor.current_position))
+    # y_stepper_motor.move(-abs(y_stepper_motor.current_position))
 
     x_stepper_motor.current_position = 0
     y_stepper_motor.current_position = 0
 
+    save_current_position()
+    print('Reached the initial point!')
+
 def chosen_by(index):
     chosen = grid_frame.winfo_children()[index-1]
     tasks.add_or_remove_task(chosen)
+    print(chosen.midpoint_coord)
 
 def choose_all():
     if them_all.get():
@@ -141,10 +163,10 @@ def choose_all():
         tasks.clear_tasks()
 
 def run_process():
-    print(len(tasks.list_of_tasks))
+    print("Tasks count: ", len(tasks.list_of_tasks))
+    print()
     for task in tasks.list_of_tasks:
         task.reach_me()
-        print(task.cell_index, task.midpoint_coord)
 
     sleep(int(wait_time.get()))
     to_initial_position()
@@ -200,7 +222,8 @@ def save_current_position():
 
 def read_current_positoin():
     with open("current_position.txt", "r") as file:
-        x_stepper_motor.current_position, y_stepper_motor.current_position = file.readline().split(",")
+        x_read, y_read = file.readline().split(",")
+        x_stepper_motor.current_position, y_stepper_motor.current_position = int(x_read), int(y_read)
 
 resolution_dict = {1: [0,0,0],
                    2: [1,0,0],
@@ -224,8 +247,8 @@ Y_MS2_Pin = 8
 Y_MS3_Pin = 7
 
 
-X_MAX = 2700
-Y_MAX = 3100
+X_MAX = 3000
+Y_MAX = 2300
 
 
 master = Tk()
@@ -236,6 +259,9 @@ tasks = Tasks()
 
 x_stepper_motor = StepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005)
 y_stepper_motor = StepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005)
+
+# x_stepper_motor = DummyStepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005)
+# y_stepper_motor = DummyStepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005)
 
 
 master.title("Image Taker")
@@ -283,4 +309,5 @@ main_frame.pack(expand=True, fill=BOTH)
 mainloop()
 
 GPIO.cleanup()
+print()
 print("Finish!")
