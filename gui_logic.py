@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
 from time import sleep
+from multiprocessing import Process
 import RPi.GPIO as GPIO
 
 
@@ -14,6 +15,9 @@ import RPi.GPIO as GPIO
 #         self.current_step = 0
 
 #         self.current_position = 0
+
+#     def move(self, step):
+#         print(f"Moving {step} step")
 
 class StepperMotor():
     def __init__(self, which, step_pin, direction_pin, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, delay=0.208, resolution = 1):
@@ -90,8 +94,13 @@ class ButtonCell(Button):
         print(f"Moving to the x={self.midpoint_coord[0]}, y={self.midpoint_coord[1]}")
         print(f'X diff: {self.midpoint_coord[0] - x_stepper_motor.current_position}, Y diff: {self.midpoint_coord[1] - y_stepper_motor.current_position}')
 
-        x_finished = x_stepper_motor.move(self.midpoint_coord[0] - x_stepper_motor.current_position)
-        y_finished = y_stepper_motor.move(self.midpoint_coord[1] - y_stepper_motor.current_position)
+        if __name__ == "__main__":
+            p1 = Process(target = x_stepper_motor.move, args=(self.midpoint_coord[0] - x_stepper_motor.current_position,))
+            p2 = Process(target = y_stepper_motor.move, args=(self.midpoint_coord[1] - y_stepper_motor.current_position,))
+            p1.start()
+            p2.start()
+            p1.join()
+            p2.join()
 
         self.capture_me()
 
@@ -113,13 +122,12 @@ class Tasks():
     def add_or_remove_task(self, task):
         if (task in self.list_of_tasks):
             self.list_of_tasks.remove(task)
-            task.configure(bg="white")
+            task.configure(bg="gray")
         else:
             self.list_of_tasks.append(task)
             task.configure(bg="green")
 
     def execute_tasks(self):
-        # !!! DO SOMETHING ABOUT IT !!!
         for task in self.list_of_tasks:
             task.reach_me()
 
@@ -139,19 +147,32 @@ class Tasks():
 
 def to_initial_position():
     print("Going back")
-    messagebox.showinfo("Сообщение", "На исходную точку")
 
-    print(f'(Back) X diff: {-abs(x_stepper_motor.current_position)}, Y diff: {-abs(y_stepper_motor.current_position)}')
-    # x_stepper_motor.move(-abs(x_stepper_motor.current_position))
-    # y_stepper_motor.move(-abs(y_stepper_motor.current_position))
+    answer = messagebox.askyesno(title="Внимание!", message="Хотите вернуться в исходную точку?")
 
-    x_stepper_motor.current_position = 0
-    y_stepper_motor.current_position = 0
+    if answer:
+        print(f'(Back) X diff: {-abs(x_stepper_motor.current_position)}, Y diff: {-abs(y_stepper_motor.current_position)}')
 
-    save_current_position()
-    print('Reached the initial point!')
+        if __name__ == "__main__":
+            p1 = Process(target = x_stepper_motor.move, args=(-abs(x_stepper_motor.current_position),))
+            p2 = Process(target = y_stepper_motor.move, args=(-abs(y_stepper_motor.current_position),))
+            p1.start()
+            p2.start()
+            p1.join()
+            p2.join()
 
+        x_stepper_motor.current_position = 0
+        y_stepper_motor.current_position = 0
+
+        save_current_position()
+        print('Reached the initial point!')
+
+        messagebox.showwarning(title="Сообщение", message="Возвращен на исходную точку")
+    
+    tasks.list_of_tasks.clear()
+    
 def chosen_by(index):
+    print("Tasks count: ", len(tasks.list_of_tasks))
     chosen = grid_frame.winfo_children()[index-1]
     tasks.add_or_remove_task(chosen)
     print(chosen.midpoint_coord)
@@ -167,8 +188,10 @@ def run_process():
     print()
     for task in tasks.list_of_tasks:
         task.reach_me()
-
+        task.configure(bg="gray")
+    
     sleep(int(wait_time.get()))
+    messagebox.showinfo(title="Сообщение", message="Процесс завершен")
     to_initial_position()
 
 def create_grid():
@@ -179,7 +202,7 @@ def create_grid():
         assert wait_time.get() != ""; checking_wait = int(height.get())
     except:
         print("No or invalid data for grid creation")
-        messagebox.showinfo("Сообщение", "Введите корректные данные о сетке")
+        messagebox.showerror("Внимание!", "Введите корректные данные о сетке")
     else:
         grid = Grid(X_MAX, Y_MAX, int(height.get()), int(width.get()))
         grid_frame.grid_columnconfigure(list(range(grid.number_of_rows)), weight=1)
@@ -200,7 +223,7 @@ def create_grid():
                 cell_x_coord = int( grid.x_max/grid.number_of_cols/2 + (grid.x_max/grid.number_of_cols)*(j))
                 cell_y_coord = grid.y_max - int( grid.y_max/grid.number_of_rows/2 + (grid.y_max/grid.number_of_rows)*(i))
 
-                back_button = ButtonCell(cell_count, (cell_x_coord, cell_y_coord), grid_frame, text = str(cell_count), command= lambda ztemp= cell_count : chosen_by(ztemp), font=main_font)
+                back_button = ButtonCell(cell_count, (cell_x_coord, cell_y_coord), grid_frame, text = str(cell_count), bg='gray', command= lambda ztemp= cell_count : chosen_by(ztemp), font=main_font)
                 back_button.grid(row = i, column = j, sticky="WENS")
 
         all_cells = Checkbutton(footer_frame, text='Все ячейки',variable=them_all, onvalue=1, offvalue=0, command=choose_all, font=main_font)
@@ -216,6 +239,11 @@ def create_grid():
         footer_frame.pack(expand=True, fill=BOTH)
 
 
+def set_initial_position(event):
+    with open("current_position.txt", "w") as file:
+        file.write(str(0) + "," + str(0))
+    messagebox.showinfo("Сообщение", "Исходная точка назначена")
+
 def save_current_position():
     with open("current_position.txt", "w") as file:
         file.write(str(x_stepper_motor.current_position) + "," + str(y_stepper_motor.current_position))
@@ -224,6 +252,16 @@ def read_current_positoin():
     with open("current_position.txt", "r") as file:
         x_read, y_read = file.readline().split(",")
         x_stepper_motor.current_position, y_stepper_motor.current_position = int(x_read), int(y_read)
+
+
+def up(event):
+    y_stepper_motor.move(50)
+def down(event):
+    y_stepper_motor.move(-50)
+def left(event):
+    x_stepper_motor.move(-50)
+def right(event):
+    x_stepper_motor.move(50)
 
 resolution_dict = {1: [0,0,0],
                    2: [1,0,0],
@@ -305,6 +343,13 @@ back_button = Button(main_frame, height = 2, text = "На исходную то�
 back_button.grid(row = 4, column = 0, columnspan = 2, pady = 5, sticky="WENS")
 
 main_frame.pack(expand=True, fill=BOTH)
+
+master.bind("s", set_initial_position)
+
+master.bind("<Up>", up)
+master.bind("<Down>", down)
+master.bind("<Left>", left)
+master.bind("<Right>", right)
 
 mainloop()
 
