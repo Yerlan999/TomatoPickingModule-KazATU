@@ -1,0 +1,65 @@
+Bus 001 Device 006: ID 093a:2625 Pixart Imaging, Inc.
+
+[ 3273.447931] unicam fe801000.csi: Wrong width or height 320x240 (remote pad set to 640x480)
+[ 3273.447947] unicam fe801000.csi: Failed to start media pipeline: -22
+[ 3502.232965] unicam fe801000.csi: Wrong width or height 320x240 (remote pad set to 640x480)
+[ 3502.232982] unicam fe801000.csi: Failed to start media pipeline: -22
+[ 3535.910657] unicam fe801000.csi: Failed to start media pipeline: -22
+[ 3575.516963] unicam fe801000.csi: Failed to start media pipeline: -22
+
+v4l2-ctl --all
+
+Driver Info:
+        Driver name      : unicam
+        Card type        : unicam
+        Bus info         : platform:fe801000.csi
+        Driver version   : 5.15.32
+        Capabilities     : 0xa5a00001
+                Video Capture
+                Metadata Capture
+                Read/Write
+                Streaming
+                Extended Pix Format
+                Device Capabilities
+        Device Caps      : 0x25200001
+                Video Capture
+                Read/Write
+                Streaming
+                Extended Pix Format
+Media Driver Info:
+        Driver name      : unicam
+        Model            : unicam
+        Serial           :
+        Bus info         : platform:fe801000.csi
+        Media version    : 5.15.32
+        Hardware revision: 0x00000000 (0)
+        Driver version   : 5.15.32
+Interface Info:
+        ID               : 0x03000005
+        Type             : V4L Video
+Entity Info:
+        ID               : 0x00000003 (3)
+        Name             : unicam-image
+        Function         : V4L2 I/O
+        Flags         : default
+        Pad 0x01000004   : 0: Sink
+          Link 0x02000007: from remote pad 0x1000002 of entity 'ov5647 10-0036': Data, Enabled, Immutable
+Priority: 2
+Video input : 0 (unicam-image: ok)
+Format Video Capture:
+        Width/Height      : 640/480
+        Pixel Format      : 'BGR3' (24-bit BGR 8-8-8)
+        Field             : None
+        Bytes per Line    : 1920
+        Size Image        : 921600
+        Colorspace        : sRGB
+        Transfer Function : sRGB
+        YCbCr/HSV Encoding: ITU-R 601
+        Quantization      : Full Range
+        Flags             :
+
+LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libv4l/v4l1compat.so fswebcam test.jpeg
+5.15.32-v7l+
+sudo aptitude install mercurial build-essential linux-headers-5.15.32-v7l+ libncurses5-dev v4l2ucp camorama
+
+scp pi@192.168.217.99:~/gui_logic.py

@@ -1,3 +1,4 @@
+import os
 from tkinter import *
 from tkinter import messagebox
 from time import sleep
@@ -112,6 +113,7 @@ class ButtonCell(Button):
 
     def capture_me(self):
         sleep(int(wait_time.get()))
+        os.system(f"LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libv4l/v4l1compat.so fswebcam test{self.cell_index}.jpeg")
         print("Taking picture with WEB camera")
 
 
@@ -151,6 +153,7 @@ def to_initial_position():
     answer = messagebox.askyesno(title="Внимание!", message="Хотите вернуться в исходную точку?")
 
     if answer:
+        read_current_positoin()
         print(f'(Back) X diff: {-abs(x_stepper_motor.current_position)}, Y diff: {-abs(y_stepper_motor.current_position)}')
 
         if __name__ == "__main__":
@@ -240,6 +243,9 @@ def create_grid():
 
 
 def set_initial_position(event):
+    x_stepper_motor.current_position = 0
+    y_stepper_motor.current_position = 0
+    
     with open("current_position.txt", "w") as file:
         file.write(str(0) + "," + str(0))
     messagebox.showinfo("Сообщение", "Исходная точка назначена")
@@ -255,13 +261,17 @@ def read_current_positoin():
 
 
 def up(event):
-    y_stepper_motor.move(50)
+    y_stepper_motor.move(manual_step)
+    y_stepper_motor.current_position += manual_step
 def down(event):
-    y_stepper_motor.move(-50)
+    y_stepper_motor.move(-manual_step)
+    y_stepper_motor.current_position += -manual_step
 def left(event):
-    x_stepper_motor.move(-50)
+    x_stepper_motor.move(-manual_step)
+    x_stepper_motor.current_position += -manual_step
 def right(event):
-    x_stepper_motor.move(50)
+    x_stepper_motor.move(manual_step)
+    x_stepper_motor.current_position += manual_step
 
 resolution_dict = {1: [0,0,0],
                    2: [1,0,0],
@@ -285,9 +295,10 @@ Y_MS2_Pin = 8
 Y_MS3_Pin = 7
 
 
-X_MAX = 3000
-Y_MAX = 2300
+X_MAX = 2500
+Y_MAX = 1300
 
+manual_step = 50
 
 master = Tk()
 
