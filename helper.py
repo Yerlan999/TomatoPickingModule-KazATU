@@ -1,20 +1,24 @@
-import cv2
-from time import sleep
+import tkinter as tk
+
+def on_enter(e):
+    e.widget['background'] = 'green'
+
+def on_leave(e):
+    e.widget['background'] = 'SystemButtonFace'
+
+root = tk.Tk()
+myButton = tk.Button(root,text="Click Me")
+myButton.grid()
 
 
-cam = cv2.VideoCapture(1)
+myButton.bind("<Enter>", on_enter)
+myButton.bind("<Leave>", on_leave)
 
-if cam.isOpened():
-    print("Camera opened")
-    ret, image = cam.read()
-    if ret:
-        cv2.imwrite('testimage.jpg', image)
-    else:
-        print("Nothing found in a frame")
-else:
-    print("Camera not opened")
-cam.release()
+myButton2 = tk.Button(root,text="Click Me")
+myButton2.grid()
 
 
+myButton2.bind("<Enter>", on_enter)
+myButton2.bind("<Leave>", on_leave)
 
-
+root.mainloop()
