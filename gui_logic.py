@@ -1,4 +1,5 @@
 import os
+import shutil
 from tkinter import *
 from tkinter import messagebox
 from time import sleep
@@ -118,9 +119,10 @@ class ButtonCell(Button):
     def capture_me(self):
         sleep(int(wait_time.get()))
         photo_name = f"{self.cell_index}_cell_photo.jpeg"
+        os.chdir("cell_photos/")
         os.system(f"LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libv4l/v4l1compat.so fswebcam --no-banner {photo_name}")
         print(f"Taking picture {photo_name} with WEB camera")
-
+        os.chdir("/home/pi")
 
 class Tasks():
     def __init__(self):
@@ -204,6 +206,9 @@ def run_process():
 
     print("Tasks count: ", len(tasks.list_of_tasks))
     print()
+    
+    create_photos_folder()
+    
     for task in tasks.list_of_tasks:
         task.reach_me()
         task.configure(bg=unselected_cell_button_color)
@@ -212,6 +217,13 @@ def run_process():
     messagebox.showinfo(title="Сообщение", message="Процесс завершен")
     to_initial_position()
 
+def create_photos_folder():
+    if not (os.path.exists("cell_photos/")):
+        os.makedirs("cell_photos/")
+    elif len(os.listdir("cell_photos/")) > 0:
+        shutil.rmtree("cell_photos/")
+        os.makedirs("cell_photos/")
+        
 def create_grid():
     global grid
 
