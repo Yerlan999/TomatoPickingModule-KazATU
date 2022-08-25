@@ -1,14 +1,26 @@
-import os
-import shutil
+import os, re, shutil
 from tkinter import *
 from tkinter import messagebox
 from time import sleep
-from multiprocessing import Process
-import RPi.GPIO as GPIO
+# from multiprocessing import Process
+# import RPi.GPIO as GPIO
 
 
-# class DummyStepperMotor():
+class DummyStepperMotor():
 
+    def __init__(self, which, step_pin, direction_pin, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, delay=0.208, resolution = 1):
+        self.which = which
+        self.step_pin = step_pin
+        self.direction_pin = direction_pin
+        self.delay = delay
+        self.current_step = 0
+        print(resolution_dict[resolution])
+        self.current_position = 0
+
+    def move(self, step):
+        print(f"Moving {step} step")
+
+# class StepperMotor():
 #     def __init__(self, which, step_pin, direction_pin, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, delay=0.208, resolution = 1):
 #         self.which = which
 #         self.step_pin = step_pin
@@ -18,53 +30,40 @@ import RPi.GPIO as GPIO
 
 #         self.current_position = 0
 
-#     def move(self, step):
-#         print(f"Moving {step} step")
+#         GPIO.setmode(GPIO.BCM)
+#         GPIO.setwarnings(False)
+#         GPIO.setup(self.step_pin, GPIO.OUT)
+#         GPIO.setup(self.direction_pin, GPIO.OUT)
 
-class StepperMotor():
-    def __init__(self, which, step_pin, direction_pin, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, delay=0.208, resolution = 1):
-        self.which = which
-        self.step_pin = step_pin
-        self.direction_pin = direction_pin
-        self.delay = delay
-        self.current_step = 0
+#         if (which == "x"):
+#             GPIO.setup(X_MS1_Pin, GPIO.OUT)
+#             GPIO.setup(X_MS2_Pin, GPIO.OUT)
+#             GPIO.setup(X_MS3_Pin, GPIO.OUT)
 
-        self.current_position = 0
+#             GPIO.output(X_MS1_Pin, resolution_dict[resolution][0])
+#             GPIO.output(X_MS2_Pin, resolution_dict[resolution][1])
+#             GPIO.output(X_MS3_Pin, resolution_dict[resolution][2])
+#         else:
+#             GPIO.setup(Y_MS1_Pin, GPIO.OUT)
+#             GPIO.setup(Y_MS2_Pin, GPIO.OUT)
+#             GPIO.setup(Y_MS3_Pin, GPIO.OUT)
 
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
-        GPIO.setup(self.step_pin, GPIO.OUT)
-        GPIO.setup(self.direction_pin, GPIO.OUT)
-
-        if (which == "x"):
-            GPIO.setup(X_MS1_Pin, GPIO.OUT)
-            GPIO.setup(X_MS2_Pin, GPIO.OUT)
-            GPIO.setup(X_MS3_Pin, GPIO.OUT)
-
-            GPIO.output(X_MS1_Pin, resolution_dict[resolution][0])
-            GPIO.output(X_MS2_Pin, resolution_dict[resolution][1])
-            GPIO.output(X_MS3_Pin, resolution_dict[resolution][2])
-        else:
-            GPIO.setup(Y_MS1_Pin, GPIO.OUT)
-            GPIO.setup(Y_MS2_Pin, GPIO.OUT)
-            GPIO.setup(Y_MS3_Pin, GPIO.OUT)
-
-            GPIO.output(Y_MS1_Pin, resolution_dict[resolution][0])
-            GPIO.output(Y_MS2_Pin, resolution_dict[resolution][1])
-            GPIO.output(Y_MS3_Pin, resolution_dict[resolution][2])
+#             GPIO.output(Y_MS1_Pin, resolution_dict[resolution][0])
+#             GPIO.output(Y_MS2_Pin, resolution_dict[resolution][1])
+#             GPIO.output(Y_MS3_Pin, resolution_dict[resolution][2])
 
 
-    def move(self, steps_to_take):
-        GPIO.output(self.direction_pin, int(steps_to_take > 0))
+#     def move(self, steps_to_take):
+#         GPIO.output(self.direction_pin, int(steps_to_take > 0))
 
-        for x in range(abs(steps_to_take)):
-            GPIO.output(self.step_pin, GPIO.HIGH)
-            self.current_step += 1
-            sleep(self.delay)
-            GPIO.output(self.step_pin, GPIO.LOW)
-            sleep(self.delay)
+#         for x in range(abs(steps_to_take)):
+#             GPIO.output(self.step_pin, GPIO.HIGH)
+#             self.current_step += 1
+#             sleep(self.delay)
+#             GPIO.output(self.step_pin, GPIO.LOW)
+#             sleep(self.delay)
 
-        return True
+#         return True
 
 
 class Grid():
@@ -87,7 +86,6 @@ class ButtonCell(Button):
         super().__init__(*args, **kwargs)
         self.cell_index = cell_index
         self.midpoint_coord = midpoint_coord
-        #self.is_seleced = False
 
     def reach_me(self):
         print()
@@ -97,16 +95,16 @@ class ButtonCell(Button):
         print(f"Moving to the x={self.midpoint_coord[0]}, y={self.midpoint_coord[1]}")
         print(f'X diff: {self.midpoint_coord[0] - x_stepper_motor.current_position}, Y diff: {self.midpoint_coord[1] - y_stepper_motor.current_position}')
 
-        if __name__ == "__main__":
-            p1 = Process(target = x_stepper_motor.move, args=(self.midpoint_coord[0] - x_stepper_motor.current_position,))
-            p2 = Process(target = y_stepper_motor.move, args=(self.midpoint_coord[1] - y_stepper_motor.current_position,))
-            p1.start()
-            p2.start()
-            p1.join()
-            p2.join()
+        # if __name__ == "__main__":
+        #     p1 = Process(target = x_stepper_motor.move, args=(self.midpoint_coord[0] - x_stepper_motor.current_position,))
+        #     p2 = Process(target = y_stepper_motor.move, args=(self.midpoint_coord[1] - y_stepper_motor.current_position,))
+        #     p1.start()
+        #     p2.start()
+        #     p1.join()
+        #     p2.join()
 
-        # x_stepper_motor.move(self.midpoint_coord[0] - x_stepper_motor.current_position)
-        # y_stepper_motor.move(self.midpoint_coord[1] - y_stepper_motor.current_position)
+        x_stepper_motor.move(self.midpoint_coord[0] - x_stepper_motor.current_position)
+        y_stepper_motor.move(self.midpoint_coord[1] - y_stepper_motor.current_position)
 
         self.capture_me()
 
@@ -119,10 +117,10 @@ class ButtonCell(Button):
     def capture_me(self):
         sleep(int(wait_time.get()))
         photo_name = f"{self.cell_index}_cell_photo.jpeg"
-        os.chdir("cell_photos/")
-        os.system(f"LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libv4l/v4l1compat.so fswebcam --no-banner {photo_name}")
+        # os.chdir("cell_photos/")
+        # os.system(f"LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libv4l/v4l1compat.so fswebcam --no-banner {photo_name}")
         print(f"Taking picture {photo_name} with WEB camera")
-        os.chdir("/home/pi")
+        # os.chdir("/home/pi")
 
 class Tasks():
     def __init__(self):
@@ -166,16 +164,16 @@ def to_initial_position():
         read_current_positoin()
         print(f'(Back) X diff: {-abs(x_stepper_motor.current_position)}, Y diff: {-abs(y_stepper_motor.current_position)}')
 
-        if __name__ == "__main__":
-            p1 = Process(target = x_stepper_motor.move, args=(-abs(x_stepper_motor.current_position),))
-            p2 = Process(target = y_stepper_motor.move, args=(-abs(y_stepper_motor.current_position),))
-            p1.start()
-            p2.start()
-            p1.join()
-            p2.join()
+        # if __name__ == "__main__":
+        #     p1 = Process(target = x_stepper_motor.move, args=(-abs(x_stepper_motor.current_position),))
+        #     p2 = Process(target = y_stepper_motor.move, args=(-abs(y_stepper_motor.current_position),))
+        #     p1.start()
+        #     p2.start()
+        #     p1.join()
+        #     p2.join()
 
-        # x_stepper_motor.move(-abs(x_stepper_motor.current_position))
-        # y_stepper_motor.move(-abs(y_stepper_motor.current_position))
+        x_stepper_motor.move(-abs(x_stepper_motor.current_position))
+        y_stepper_motor.move(-abs(y_stepper_motor.current_position))
 
         x_stepper_motor.current_position = 0
         y_stepper_motor.current_position = 0
@@ -206,9 +204,9 @@ def run_process():
 
     print("Tasks count: ", len(tasks.list_of_tasks))
     print()
-    
-    create_photos_folder()
-    
+
+    # create_photos_folder()
+
     for task in tasks.list_of_tasks:
         task.reach_me()
         task.configure(bg=unselected_cell_button_color)
@@ -217,15 +215,21 @@ def run_process():
     messagebox.showinfo(title="Сообщение", message="Процесс завершен")
     to_initial_position()
 
-def create_photos_folder():
-    if not (os.path.exists("cell_photos/")):
-        os.makedirs("cell_photos/")
-    elif len(os.listdir("cell_photos/")) > 0:
-        shutil.rmtree("cell_photos/")
-        os.makedirs("cell_photos/")
-        
+# def create_photos_folder():
+#     if not (os.path.exists("cell_photos/")):
+#         os.makedirs("cell_photos/")
+#     elif len(os.listdir("cell_photos/")) > 0:
+#         shutil.rmtree("cell_photos/")
+#         os.makedirs("cell_photos/")
+
 def create_grid():
-    global grid
+    global grid, x_stepper_motor, y_stepper_motor
+
+    # x_stepper_motor = StepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005, micro_stepping_mode.get())
+    # y_stepper_motor = StepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005, micro_stepping_mode.get())
+
+    x_stepper_motor = DummyStepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005, micro_stepping_mode.get())
+    y_stepper_motor = DummyStepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005, micro_stepping_mode.get())
 
     if not calculate_max_steps():
         return
@@ -306,36 +310,60 @@ def read_current_positoin():
 def up(event):
     y_stepper_motor.move(manual_step)
     y_stepper_motor.current_position += manual_step
+    save_current_position()
 def down(event):
     y_stepper_motor.move(-manual_step)
     y_stepper_motor.current_position += -manual_step
+    save_current_position()
 def left(event):
     x_stepper_motor.move(-manual_step)
     x_stepper_motor.current_position += -manual_step
+    save_current_position()
 def right(event):
     x_stepper_motor.move(manual_step)
     x_stepper_motor.current_position += manual_step
+    save_current_position()
 
 resolution_dict = {1: [0,0,0],
                    2: [1,0,0],
                    4: [0,1,0],
                    8: [1,1,0],
-                  16: [1,1,1],}
+                  16: [0,0,1],
+                  32: [1,1,1],}
 
+scales = ["mm", "cm", "m"]
+resolutions = [res for res in resolution_dict.keys()]
 
 def calculate_max_steps():
     global X_MAX, Y_MAX
 
     try:
-        assert workzone_width.get() != ""; checking_width = int(workzone_width.get())
-        assert workzone_height.get() != ""; checking_height = int(workzone_height.get())
+        assert workzone_width.get() != ""; checking_width = float(workzone_width.get())
+        assert workzone_height.get() != ""; checking_height = float(workzone_height.get())
     except:
         print("No or invalid data for working zone")
         messagebox.showerror("Внимание!", "Введите корректные данные о рабочей зоне")
         return
     else:
-        X_MAX = int(int(workzone_width.get())/x_one_revol_cm*one_revol_steps) # 2500
-        Y_MAX = int(int(workzone_height.get())/y_one_revol_cm*one_revol_steps) # 1300
+        new_workzone_width = workzone_width.get()
+        new_workzone_height = workzone_height.get()
+
+        if measure_unit_workzone_width.get() == "mm":
+            new_workzone_width = float(new_workzone_width)/10
+        if measure_unit_workzone_height.get() == "mm":
+            new_workzone_height = float(new_workzone_height)/10
+        if measure_unit_workzone_width.get() == "m":
+            new_workzone_width = float(new_workzone_width)*100
+        if measure_unit_workzone_height.get() == "m":
+            new_workzone_height = float(new_workzone_height)*100
+        if measure_unit_workzone_width.get() == "cm":
+            pass
+        if measure_unit_workzone_height.get() == "cm":
+            pass
+
+
+        X_MAX = int(int(float(new_workzone_width))/x_one_revol_cm*(one_revol_steps*micro_stepping_mode.get())) # 2500
+        Y_MAX = int(int(float(new_workzone_height))/y_one_revol_cm*(one_revol_steps*micro_stepping_mode.get())) # 1300
 
         return True
 
@@ -352,7 +380,10 @@ def cell_on_leave(e):
     if not (e.widget in tasks.list_of_tasks):
         e.widget['background'] = unselected_cell_button_color
 
-
+def validate_numbers(index, numbers):
+    return globals()["pattern"].match(numbers) is not None
+def validate_numbers2(index, numbers):
+    return globals()["pattern2"].match(numbers) is not None
 
 X_STEP_PIN = 23
 X_DIRECTION_PIN = 24
@@ -376,6 +407,7 @@ y_one_revol_cm = 3.8
 
 one_revol_steps = 200
 
+
 X_MAX = 0
 Y_MAX = 0
 
@@ -386,13 +418,13 @@ master = Tk()
 grid = None
 tasks = Tasks()
 
+pattern = re.compile(r'^([\.\d]*)$')
+pattern2 = re.compile(r'^([\d]*)$')
+vcmd = (master.register(validate_numbers), "%i", "%P")
+vcmd2 = (master.register(validate_numbers2), "%i", "%P")
 
-x_stepper_motor = StepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005)
-y_stepper_motor = StepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005)
-
-# x_stepper_motor = DummyStepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005)
-# y_stepper_motor = DummyStepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005)
-
+x_stepper_motor = None
+y_stepper_motor = None
 
 master.title("Image Taker")
 main_font = ("Terminal", 14)
@@ -428,38 +460,54 @@ width = StringVar()
 height = StringVar()
 them_all = BooleanVar()
 wait_time = StringVar()
+measure_unit_workzone_width = StringVar()
+measure_unit_workzone_height = StringVar()
+micro_stepping_mode = IntVar()
 
+measure_unit_workzone_width.set("cm")
+measure_unit_workzone_height.set("cm")
+micro_stepping_mode.set(1)
 
-workzone_width_label = Label(main_frame, text = "Ширина раб.зоны (см):", anchor=CENTER, relief=RIDGE, font=main_font)
-workzone_height_label = Label(main_frame, text = "Длина раб.зоны (см):", anchor=CENTER, relief=RIDGE, font=main_font)
-width_label = Label(main_frame, text = "Кол. строк:", anchor=CENTER, relief=RIDGE, font=main_font)
-height_label = Label(main_frame, text = "Кол. столб:", anchor=CENTER, relief=RIDGE, font=main_font)
+workzone_width_label = Label(main_frame, text = "Ширина раб.зоны:", anchor=CENTER, relief=RIDGE, font=main_font)
+workzone_height_label = Label(main_frame, text = "Длина раб.зоны:", anchor=CENTER, relief=RIDGE, font=main_font)
+height_label = Label(main_frame, text = "Кол. строк:", anchor=CENTER, relief=RIDGE, font=main_font)
+width_label = Label(main_frame, text = "Кол. столб:", anchor=CENTER, relief=RIDGE, font=main_font)
 wait_label = Label(main_frame, text = "Ожидание (сек):", anchor=CENTER, relief=RIDGE, font=main_font)
+micro_step_label = Label(main_frame, text = "Микрошаг:", anchor=CENTER, relief=RIDGE, font=main_font)
 
 workzone_width_label.grid(row = 0, column = 0, pady = 2, sticky="WENS")
 workzone_height_label.grid(row = 1, column = 0, pady = 2, sticky="WENS")
-width_label.grid(row = 2, column = 0, pady = 2, sticky="WENS")
-height_label.grid(row = 3, column = 0, pady = 2, sticky="WENS")
+height_label.grid(row = 2, column = 0, pady = 2, sticky="WENS")
+width_label.grid(row = 3, column = 0, pady = 2, sticky="WENS")
 wait_label.grid(row = 4, column = 0, pady = 2, sticky="WENS")
+micro_step_label.grid(row = 7, column = 0, columnspan = 2, pady = 2, sticky="WENS")
 
+workzone_width_entry = Entry(main_frame, textvariable = workzone_width, validate="key", validatecommand=vcmd)
+workzone_height_entry = Entry(main_frame, textvariable = workzone_height, validate="key", validatecommand=vcmd)
+height_entry = Entry(main_frame, textvariable = height, validate="key", validatecommand=vcmd2)
+width_entry = Entry(main_frame, textvariable = width, validate="key", validatecommand=vcmd2)
+wait_entry = Entry(main_frame, textvariable = wait_time, validate="key", validatecommand=vcmd2)
 
-workzone_height_entry = Entry(main_frame, textvariable = workzone_height)
-workzone_width_entry = Entry(main_frame, textvariable = workzone_width)
-height_entry = Entry(main_frame, textvariable = height)
-width_entry = Entry(main_frame, textvariable = width)
-wait_entry = Entry(main_frame, textvariable = wait_time)
-
-workzone_height_entry.grid(row = 0, column = 1, pady = 2, sticky="WENS")
-workzone_width_entry.grid(row = 1, column = 1, pady = 2, sticky="WENS")
+workzone_width_entry.grid(row = 0, column = 1, pady = 2, sticky="WENS")
+workzone_height_entry.grid(row = 1, column = 1, pady = 2, sticky="WENS")
 height_entry.grid(row = 2, column = 1, pady = 2, sticky="WENS")
 width_entry.grid(row = 3, column = 1, pady = 2, sticky="WENS")
 wait_entry.grid(row = 4, column = 1, pady = 2, sticky="WENS")
 
+
+width_scale_options_entry = OptionMenu(main_frame, measure_unit_workzone_width, *scales)
+height_scale_options_entry = OptionMenu(main_frame, measure_unit_workzone_height, *scales)
+micro_stepping_options_entry = OptionMenu(main_frame, micro_stepping_mode, *resolutions)
+
+width_scale_options_entry.grid(row = 0, column = 2, pady = 2, sticky="WENS")
+height_scale_options_entry.grid(row = 1, column = 2, pady = 2, sticky="WENS")
+micro_stepping_options_entry.grid(row = 7, column = 2, pady = 2, sticky="WENS")
+
 create_grid_button = Button(main_frame, height = 2, text = "Создать сетку", command = create_grid, font=main_font, bg=create_grid_button_color, activebackground=pressed_create_grid_button_color)
-create_grid_button.grid(row = 5, column = 0, columnspan = 2, pady = 5, sticky="WENS")
+create_grid_button.grid(row = 5, column = 0, columnspan = 3, pady = 5, sticky="WENS")
 
 back_button = Button(main_frame, height = 2, text = "На исходную точку", command = to_initial_position, font=main_font, bg=to_initial_position_button_color, activebackground=pressed_to_initial_position_button_color)
-back_button.grid(row = 6, column = 0, columnspan = 2, pady = 5, sticky="WENS")
+back_button.grid(row = 6, column = 0, columnspan = 3, pady = 5, sticky="WENS")
 
 main_frame.pack(expand=True, fill=BOTH)
 
@@ -479,6 +527,6 @@ master.bind("<Right>", right)
 
 mainloop()
 
-GPIO.cleanup()
+# GPIO.cleanup()
 print()
 print("Finish!")
