@@ -118,7 +118,7 @@ class ButtonCell(Button):
         sleep(int(wait_time.get()))
         photo_name = f"{self.cell_index}_cell_photo.jpeg"
         os.chdir("cell_photos/")
-        os.system(f"LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libv4l/v4l1compat.so fswebcam --no-banner {photo_name}")
+        # os.system(f"LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libv4l/v4l1compat.so fswebcam --no-banner {photo_name}")
         print(f"Taking picture {photo_name} with WEB camera")
         os.chdir("/home/pi")
 
@@ -188,8 +188,11 @@ def to_initial_position():
 def chosen_by(index):
     chosen = grid_frame.winfo_children()[index-1]
     tasks.add_or_remove_task(chosen)
-    print(chosen.midpoint_coord)
+    print()
+    print("Cell number: ", chosen.cell_index)
+    print("Middle coordinate: ", chosen.midpoint_coord)
     print("Tasks count: ", len(tasks.list_of_tasks))
+    print()
 
 def choose_all():
     if them_all.get():
@@ -198,10 +201,18 @@ def choose_all():
         tasks.clear_tasks()
 
 def run_process():
+        
+    answer = messagebox.askyesno(title="Внимание!", message="Хотите начать процесс обработки с введенныим значениями?")
+    
+    if not answer:
+        return
+        
     if not is_initial_position_set:
         messagebox.showerror(title="Внимание!", message="Необходимо для начала назначить начальную точку.")
         return
-
+    
+    create_grid()
+    
     print("Tasks count: ", len(tasks.list_of_tasks))
     print()
 
@@ -242,6 +253,19 @@ def create_grid():
         print("No or invalid data for grid creation")
         messagebox.showerror("Внимание!", "Введите корректные данные о сетке")
     else:
+        print("**************** DEBUGGING *******************")
+
+        print("width: ", width.get())
+        print("height: ", height.get())
+        print("wait_time: ", wait_time.get())
+        print("workzone_width: ", workzone_width.get())
+        print("workzone_height: ", workzone_height.get())
+        print("Microstepping: ", micro_stepping_mode.get())
+        print("X_MAX: ", X_MAX)
+        print("Y_MAX: ", Y_MAX)
+
+        print("**************** DEBUGGING *******************")
+
         grid = Grid(X_MAX, Y_MAX, int(height.get()), int(width.get()))
         grid_frame.grid_columnconfigure(list(range(grid.number_of_rows)), weight=1)
 
@@ -324,15 +348,6 @@ def right(event):
     x_stepper_motor.current_position += manual_step
     save_current_position()
 
-resolution_dict = {1: [0,0,0],
-                   2: [1,0,0],
-                   4: [0,1,0],
-                   8: [1,1,0],
-                  16: [0,0,1],
-                  32: [1,1,1],}
-
-scales = ["mm", "cm", "m"]
-resolutions = [res for res in resolution_dict.keys()]
 
 def calculate_max_steps():
     global X_MAX, Y_MAX
@@ -402,8 +417,9 @@ Y_MS3_Pin = 7
 
 is_initial_position_set = False
 
+# !!! Один оборот вала шагового двигателя в см (длина окрy.) !!!
 x_one_revol_cm = 4
-y_one_revol_cm = 3.8
+y_one_revol_cm = 4
 
 one_revol_steps = 200
 motors_timing = 0.0005
@@ -423,8 +439,16 @@ pattern2 = re.compile(r'^([\d]*)$')
 vcmd = (master.register(validate_numbers), "%i", "%P")
 vcmd2 = (master.register(validate_numbers2), "%i", "%P")
 
-x_stepper_motor = None
-y_stepper_motor = None
+resolution_dict = {1: [0,0,0],
+                   2: [1,0,0],
+                   4: [0,1,0],
+                   8: [1,1,0],
+                  16: [0,0,1],
+                  32: [1,1,1],}
+
+scales = ["mm", "cm", "m"]
+resolutions = [res for res in resolution_dict.keys()]
+
 
 master.title("Image Taker")
 main_font = ("Terminal", 14)
@@ -466,7 +490,7 @@ micro_stepping_mode = IntVar()
 
 measure_unit_workzone_width.set("cm")
 measure_unit_workzone_height.set("cm")
-micro_stepping_mode.set(1)
+micro_stepping_mode.set(8)
 
 workzone_width_label = Label(main_frame, text = "Ширина раб.зоны:", anchor=CENTER, relief=RIDGE, font=main_font)
 workzone_height_label = Label(main_frame, text = "Длина раб.зоны:", anchor=CENTER, relief=RIDGE, font=main_font)
@@ -480,7 +504,7 @@ workzone_height_label.grid(row = 1, column = 0, pady = 2, sticky="WENS")
 height_label.grid(row = 2, column = 0, pady = 2, sticky="WENS")
 width_label.grid(row = 3, column = 0, pady = 2, sticky="WENS")
 wait_label.grid(row = 4, column = 0, pady = 2, sticky="WENS")
-micro_step_label.grid(row = 7, column = 0, columnspan = 2, pady = 2, sticky="WENS")
+micro_step_label.grid(row = 5, column = 0, columnspan = 2, pady = 2, sticky="WENS")
 
 workzone_width_entry = Entry(main_frame, textvariable = workzone_width, validate="key", validatecommand=vcmd)
 workzone_height_entry = Entry(main_frame, textvariable = workzone_height, validate="key", validatecommand=vcmd)
@@ -501,15 +525,19 @@ micro_stepping_options_entry = OptionMenu(main_frame, micro_stepping_mode, *reso
 
 width_scale_options_entry.grid(row = 0, column = 2, pady = 2, sticky="WENS")
 height_scale_options_entry.grid(row = 1, column = 2, pady = 2, sticky="WENS")
-micro_stepping_options_entry.grid(row = 7, column = 2, pady = 2, sticky="WENS")
+micro_stepping_options_entry.grid(row = 5, column = 2, pady = 2, sticky="WENS")
 
-create_grid_button = Button(main_frame, height = 2, text = "Создать сетку", command = create_grid, font=main_font, bg=create_grid_button_color, activebackground=pressed_create_grid_button_color)
-create_grid_button.grid(row = 5, column = 0, columnspan = 3, pady = 5, sticky="WENS")
+create_grid_button = Button(main_frame, height = 2, text = "Применить значения и создать сетку", command = create_grid, font=main_font, bg=create_grid_button_color, activebackground=pressed_create_grid_button_color)
+create_grid_button.grid(row = 6, column = 0, columnspan = 3, pady = 5, sticky="WENS")
 
 back_button = Button(main_frame, height = 2, text = "На исходную точку", command = to_initial_position, font=main_font, bg=to_initial_position_button_color, activebackground=pressed_to_initial_position_button_color)
-back_button.grid(row = 6, column = 0, columnspan = 3, pady = 5, sticky="WENS")
+back_button.grid(row = 7, column = 0, columnspan = 3, pady = 5, sticky="WENS")
 
 main_frame.pack(expand=True, fill=BOTH)
+
+
+x_stepper_motor = StepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
+y_stepper_motor = StepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
 
 
 create_grid_button.bind("<Enter>", on_enter)
