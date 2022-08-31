@@ -1,24 +1,17 @@
-import tkinter as tk
+int(workzone_width.get())
+int(workzone_height.get())
+int(width.get())
+int(height.get())
+int(wait_time.get())
+measure_unit_workzone_width.get()
+measure_unit_workzone_height.get()
+int(micro_stepping_mode.get())
 
-def on_enter(e):
-    e.widget['background'] = 'green'
-
-def on_leave(e):
-    e.widget['background'] = 'SystemButtonFace'
-
-root = tk.Tk()
-myButton = tk.Button(root,text="Click Me")
-myButton.grid()
-
-
-myButton.bind("<Enter>", on_enter)
-myButton.bind("<Leave>", on_leave)
-
-myButton2 = tk.Button(root,text="Click Me")
-myButton2.grid()
-
-
-myButton2.bind("<Enter>", on_enter)
-myButton2.bind("<Leave>", on_leave)
-
-root.mainloop()
+old_workzone_width
+old_workzone_height
+old_width
+old_height
+old_wait_time
+old_measure_unit_workzone_width
+old_measure_unit_workzone_height
+old_micro_stepping_mode
