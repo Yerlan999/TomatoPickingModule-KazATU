@@ -2,67 +2,67 @@ import os, re, shutil
 from tkinter import *
 from tkinter import messagebox
 from time import sleep
-# from multiprocessing import Process
-# import RPi.GPIO as GPIO
+from multiprocessing import Process
+import RPi.GPIO as GPIO
 
 
-class DummyStepperMotor():
+# class DummyStepperMotor():
 
-    def __init__(self, which, step_pin, direction_pin, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, delay=0.208, resolution = 1):
-        self.which = which
-        self.step_pin = step_pin
-        self.direction_pin = direction_pin
-        self.delay = delay
-        self.current_step = 0
-        self.current_position = 0
-
-    def move(self, step):
-        print(f"Moving {step} step")
-
-# class StepperMotor():
 #     def __init__(self, which, step_pin, direction_pin, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, delay=0.208, resolution = 1):
 #         self.which = which
 #         self.step_pin = step_pin
 #         self.direction_pin = direction_pin
 #         self.delay = delay
 #         self.current_step = 0
-
 #         self.current_position = 0
 
-#         GPIO.setmode(GPIO.BCM)
-#         GPIO.setwarnings(False)
-#         GPIO.setup(self.step_pin, GPIO.OUT)
-#         GPIO.setup(self.direction_pin, GPIO.OUT)
+#     def move(self, step):
+#         print(f"Moving {step} step")
 
-#         if (which == "x"):
-#             GPIO.setup(X_MS1_Pin, GPIO.OUT)
-#             GPIO.setup(X_MS2_Pin, GPIO.OUT)
-#             GPIO.setup(X_MS3_Pin, GPIO.OUT)
+class StepperMotor():
+    def __init__(self, which, step_pin, direction_pin, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, delay=0.208, resolution = 1):
+        self.which = which
+        self.step_pin = step_pin
+        self.direction_pin = direction_pin
+        self.delay = delay
+        self.current_step = 0
 
-#             GPIO.output(X_MS1_Pin, resolution_dict[resolution][0])
-#             GPIO.output(X_MS2_Pin, resolution_dict[resolution][1])
-#             GPIO.output(X_MS3_Pin, resolution_dict[resolution][2])
-#         else:
-#             GPIO.setup(Y_MS1_Pin, GPIO.OUT)
-#             GPIO.setup(Y_MS2_Pin, GPIO.OUT)
-#             GPIO.setup(Y_MS3_Pin, GPIO.OUT)
+        self.current_position = 0
 
-#             GPIO.output(Y_MS1_Pin, resolution_dict[resolution][0])
-#             GPIO.output(Y_MS2_Pin, resolution_dict[resolution][1])
-#             GPIO.output(Y_MS3_Pin, resolution_dict[resolution][2])
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+        GPIO.setup(self.step_pin, GPIO.OUT)
+        GPIO.setup(self.direction_pin, GPIO.OUT)
+
+        if (which == "x"):
+            GPIO.setup(X_MS1_Pin, GPIO.OUT)
+            GPIO.setup(X_MS2_Pin, GPIO.OUT)
+            GPIO.setup(X_MS3_Pin, GPIO.OUT)
+
+            GPIO.output(X_MS1_Pin, resolution_dict[resolution][0])
+            GPIO.output(X_MS2_Pin, resolution_dict[resolution][1])
+            GPIO.output(X_MS3_Pin, resolution_dict[resolution][2])
+        else:
+            GPIO.setup(Y_MS1_Pin, GPIO.OUT)
+            GPIO.setup(Y_MS2_Pin, GPIO.OUT)
+            GPIO.setup(Y_MS3_Pin, GPIO.OUT)
+
+            GPIO.output(Y_MS1_Pin, resolution_dict[resolution][0])
+            GPIO.output(Y_MS2_Pin, resolution_dict[resolution][1])
+            GPIO.output(Y_MS3_Pin, resolution_dict[resolution][2])
 
 
-#     def move(self, steps_to_take):
-#         GPIO.output(self.direction_pin, int(steps_to_take > 0))
+    def move(self, steps_to_take):
+        GPIO.output(self.direction_pin, int(steps_to_take > 0))
 
-#         for x in range(abs(steps_to_take)):
-#             GPIO.output(self.step_pin, GPIO.HIGH)
-#             self.current_step += 1
-#             sleep(self.delay)
-#             GPIO.output(self.step_pin, GPIO.LOW)
-#             sleep(self.delay)
+        for x in range(abs(steps_to_take)):
+            GPIO.output(self.step_pin, GPIO.HIGH)
+            self.current_step += 1
+            sleep(self.delay)
+            GPIO.output(self.step_pin, GPIO.LOW)
+            sleep(self.delay)
 
-#         return True
+        return True
 
 
 class Grid():
@@ -94,13 +94,13 @@ class ButtonCell(Button):
         print(f"Moving to the x={self.midpoint_coord[0]}, y={self.midpoint_coord[1]}")
         print(f'X diff: {self.midpoint_coord[0] - x_stepper_motor.current_position}, Y diff: {self.midpoint_coord[1] - y_stepper_motor.current_position}')
 
-        # if __name__ == "__main__":
-        #     p1 = Process(target = x_stepper_motor.move, args=(self.midpoint_coord[0] - x_stepper_motor.current_position,))
-        #     p2 = Process(target = y_stepper_motor.move, args=(self.midpoint_coord[1] - y_stepper_motor.current_position,))
-        #     p1.start()
-        #     p2.start()
-        #     p1.join()
-        #     p2.join()
+        if __name__ == "__main__":
+            p1 = Process(target = x_stepper_motor.move, args=(self.midpoint_coord[0] - x_stepper_motor.current_position,))
+            p2 = Process(target = y_stepper_motor.move, args=(self.midpoint_coord[1] - y_stepper_motor.current_position,))
+            p1.start()
+            p2.start()
+            p1.join()
+            p2.join()
 
         x_stepper_motor.move(self.midpoint_coord[0] - x_stepper_motor.current_position)
         y_stepper_motor.move(self.midpoint_coord[1] - y_stepper_motor.current_position)
@@ -116,10 +116,10 @@ class ButtonCell(Button):
     def capture_me(self):
         sleep(int(wait_time.get()))
         photo_name = f"{self.cell_index}_cell_photo.jpeg"
-        # os.chdir("cell_photos/")
-        # os.system(f"LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libv4l/v4l1compat.so fswebcam --no-banner {photo_name}")
+        os.chdir("cell_photos/")
+        os.system(f"LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libv4l/v4l1compat.so fswebcam --no-banner {photo_name}")
         print(f"Taking picture {photo_name} with WEB camera")
-        # os.chdir("/home/pi")
+        os.chdir("/home/pi")
 
 class Tasks():
     def __init__(self):
@@ -163,13 +163,13 @@ def to_initial_position():
         read_current_positoin()
         print(f'(Back) X diff: {-abs(x_stepper_motor.current_position)}, Y diff: {-abs(y_stepper_motor.current_position)}')
 
-        # if __name__ == "__main__":
-        #     p1 = Process(target = x_stepper_motor.move, args=(-(x_stepper_motor.current_position),))
-        #     p2 = Process(target = y_stepper_motor.move, args=(-(y_stepper_motor.current_position),))
-        #     p1.start()
-        #     p2.start()
-        #     p1.join()
-        #     p2.join()
+        if __name__ == "__main__":
+            p1 = Process(target = x_stepper_motor.move, args=(-(x_stepper_motor.current_position),))
+            p2 = Process(target = y_stepper_motor.move, args=(-(y_stepper_motor.current_position),))
+            p1.start()
+            p2.start()
+            p1.join()
+            p2.join()
 
         x_stepper_motor.move(-abs(x_stepper_motor.current_position))
         y_stepper_motor.move(-abs(y_stepper_motor.current_position))
@@ -219,7 +219,7 @@ def run_process():
         messagebox.showerror(title="Внимание!", message=result)
         return
 
-    # create_photos_folder()
+    create_photos_folder()
 
     for task in tasks.list_of_tasks:
         task.reach_me()
@@ -229,21 +229,21 @@ def run_process():
     messagebox.showinfo(title="Сообщение", message="Процесс завершен")
     to_initial_position()
 
-# def create_photos_folder():
-#     if not (os.path.exists("cell_photos/")):
-#         os.makedirs("cell_photos/")
-#     elif len(os.listdir("cell_photos/")) > 0:
-#         shutil.rmtree("cell_photos/")
-#         os.makedirs("cell_photos/")
+def create_photos_folder():
+    if not (os.path.exists("cell_photos/")):
+        os.makedirs("cell_photos/")
+    elif len(os.listdir("cell_photos/")) > 0:
+        shutil.rmtree("cell_photos/")
+        os.makedirs("cell_photos/")
 
 def create_grid():
     global grid, x_stepper_motor, y_stepper_motor
 
-    # x_stepper_motor = StepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
-    # y_stepper_motor = StepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
+    x_stepper_motor = StepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
+    y_stepper_motor = StepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
 
-    x_stepper_motor = DummyStepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005, micro_stepping_mode.get())
-    y_stepper_motor = DummyStepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005, micro_stepping_mode.get())
+    # x_stepper_motor = DummyStepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005, micro_stepping_mode.get())
+    # y_stepper_motor = DummyStepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, 0.0005, micro_stepping_mode.get())
 
     if not calculate_max_steps():
         return
@@ -256,18 +256,18 @@ def create_grid():
         print("No or invalid data for grid creation")
         messagebox.showerror("Внимание!", "Введите корректные данные о сетке")
     else:
-        print("**************** DEBUGGING *******************")
+        # print("**************** DEBUGGING *******************")
 
-        print("width: ", width.get())
-        print("height: ", height.get())
-        print("wait_time: ", wait_time.get())
-        print("workzone_width: ", workzone_width.get())
-        print("workzone_height: ", workzone_height.get())
-        print("Microstepping: ", micro_stepping_mode.get())
-        print("X_MAX: ", X_MAX)
-        print("Y_MAX: ", Y_MAX)
+        # print("width: ", width.get())
+        # print("height: ", height.get())
+        # print("wait_time: ", wait_time.get())
+        # print("workzone_width: ", workzone_width.get())
+        # print("workzone_height: ", workzone_height.get())
+        # print("Microstepping: ", micro_stepping_mode.get())
+        # print("X_MAX: ", X_MAX)
+        # print("Y_MAX: ", Y_MAX)
 
-        print("**************** DEBUGGING *******************")
+        # print("**************** DEBUGGING *******************")
 
 
         update_set_variables()
@@ -583,11 +583,11 @@ back_button.grid(row = 7, column = 0, columnspan = 3, pady = 5, sticky="WENS")
 main_frame.pack(expand=True, fill=BOTH)
 
 
-# x_stepper_motor = StepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
-# y_stepper_motor = StepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
+x_stepper_motor = StepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
+y_stepper_motor = StepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
 
-x_stepper_motor = DummyStepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
-y_stepper_motor = DummyStepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
+# x_stepper_motor = DummyStepperMotor("x", X_STEP_PIN, X_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
+# y_stepper_motor = DummyStepperMotor("y", Y_STEP_PIN, Y_DIRECTION_PIN, X_MS1_Pin, X_MS2_Pin, X_MS3_Pin, Y_MS1_Pin, Y_MS2_Pin, Y_MS3_Pin, motors_timing, micro_stepping_mode.get())
 
 
 create_grid_button.bind("<Enter>", on_enter)
@@ -606,6 +606,6 @@ master.bind("<Right>", right)
 
 mainloop()
 
-# GPIO.cleanup()
+GPIO.cleanup()
 print()
 print("Finish!")
