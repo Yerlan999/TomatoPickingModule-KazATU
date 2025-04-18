@@ -9,7 +9,9 @@
       <sub>Equipment connection</sub>
     </td>
   </tr>
+</table>
 
+<table>
   <tr>
     <td align="center">
       <img src="data/Screenshot_5.jpg" width="500"/><br/>
